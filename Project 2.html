@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<!-- saved from url=(0066)https://personal.utdallas.edu/~bxm190007/cs4365/projects/project2/ -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>Project 2</title>
+<style>
+  code {
+    font-family: Consolas,"courier new";
+    color: crimson;
+    background-color: #f1f1f1;
+    padding: 2px;
+    font-size: 105%;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+  </style>
+</head>
+<body data-new-gr-c-s-check-loaded="14.1307.0" data-gr-ext-installed="">
+
+<h1>Project 2: Multi-Agent Search</h1>
+
+<p><img style="display:block;margin-left:auto;margin-right:auto;width:400px" src="./Project 2_files/pacman_multi_agent.png"></p>
+
+<div style="text-align:center;">
+Pacman, now with ghosts.<br>
+Minimax, Expectimax,<br>
+Evaluation
+</div><hr>
+      <h2 class="no_toc text-delta" id="table-of-contents">
+        
+        
+          <a href="https://personal.utdallas.edu/~bxm190007/cs4365/projects/project2/#table-of-contents"></a> Table of contents
+        
+        
+      </h2>
+    
+
+<ul id="markdown-toc">
+  <li><a href="https://personal.utdallas.edu/~bxm190007/cs4365/projects/project2/#introduction" id="markdown-toc-introduction">Introduction</a></li>
+  <li><a href="https://personal.utdallas.edu/~bxm190007/cs4365/projects/project2/#welcome-to-multi-agent-pacman" id="markdown-toc-welcome-to-multi-agent-pacman">Welcome to Multi-Agent Pacman</a></li>
+  <li><a href="https://personal.utdallas.edu/~bxm190007/cs4365/projects/project2/#q1-4-pts-reflex-agent" id="markdown-toc-q1-4-pts-reflex-agent">Q1 (4 pts): Reflex Agent</a></li>
+  <li><a href="https://personal.utdallas.edu/~bxm190007/cs4365/projects/project2/#q2-5-pts-minimax" id="markdown-toc-q2-5-pts-minimax">Q2 (5 pts): Minimax</a>    <ul>
+      <li><a href="https://personal.utdallas.edu/~bxm190007/cs4365/projects/project2/#hints-and-observations" id="markdown-toc-hints-and-observations">Hints and Observations</a></li>
+    </ul>
+  </li>
+  <li><a href="https://personal.utdallas.edu/~bxm190007/cs4365/projects/project2/#q3-5-pts-alpha-beta-pruning" id="markdown-toc-q3-5-pts-alpha-beta-pruning">Q3 (5 pts): Alpha-Beta Pruning</a></li>
+  <li><a href="https://personal.utdallas.edu/~bxm190007/cs4365/projects/project2/#q4-5-pts-expectimax" id="markdown-toc-q4-5-pts-expectimax">Q4 (5 pts): Expectimax</a></li>
+  <li><a href="https://personal.utdallas.edu/~bxm190007/cs4365/projects/project2/#q5-6-pts-evaluation-function" id="markdown-toc-q5-6-pts-evaluation-function">Q5 (6 pts): Evaluation Function</a></li>
+  <li><a href="https://personal.utdallas.edu/~bxm190007/cs4365/projects/project2/#submission" id="markdown-toc-submission">Submission</a></li>
+  <li><a href="https://personal.utdallas.edu/~bxm190007/cs4365/projects/project2/#attribution">Attribution</a></li>
+</ul><hr>
+      <h2 id="introduction">
+        
+        
+          <a href="https://personal.utdallas.edu/~bxm190007/cs4365/projects/project2/#introduction"></a> Introduction
+        
+      </h2>
+    
+
+<p>In this project, you will design agents for the classic version of Pacman, including ghosts. Along the way, you will implement both minimax and expectimax search and try your hand at evaluation function design.</p>
+
+<p>The code base has not changed much from the previous project, but please start with a fresh installation, rather than intermingling files from project 1.</p>
+
+<p>As in project 1, this project includes an autograder for you to grade your answers on your machine. This can be run on all questions with the command:</p>
+
+<div><div class="highlight"><pre class="highlight"><code>python autograder.py
+</code></pre></div></div>
+
+<p>It can be run for one particular question, such as q2, by:</p>
+
+<div><div class="highlight"><pre class="highlight"><code>python autograder.py <span class="nt">-q</span> q2
+</code></pre></div></div>
+
+<p>It can be run for one particular test by commands of the form:</p>
+
+<div><div class="highlight"><pre class="highlight"><code>python autograder.py <span class="nt">-t</span> test_cases/q2/0-small-tree
+</code></pre></div></div>
+
+<p>By default, the autograder displays graphics with the <code>-t</code> option, but doesn't with the <code>-q</code> option. You can force graphics by using the <code>--graphics</code> flag, or force no graphics by using the <code>--no-graphics</code> flag.</p>
+
+<p>See the autograder tutorial in Project 0 for more information about using the autograder.</p>
+
+<p>The code for this project contains the following files, available as a <a href="https://personal.utdallas.edu/~bxm190007/cs4365/projects/assets/multiagent.zip">zip archive</a>.</p>
+
+<div class="table-wrapper"><table>
+    <tbody>
+      <tr>
+        <td colspan="2"><b>Files you'll edit:</b></td>
+      </tr>
+      <tr>
+        <td><code>multiAgents.py</code></td>
+        <td>Where all of your multi-agent search agents will reside.</td>
+      </tr>
+      <tr>
+        <td colspan="2"><b>Files you might want to look at:</b></td>
+      </tr>
+      <tr>
+        <td><code>pacman.py</code></td>
+        <td>The main file that runs Pacman games. This file also describes a Pacman GameState type, which you will use extensively in this project.</td>
+      </tr>
+      <tr>
+        <td><code>game.py</code></td>
+        <td>The logic behind how the Pacman world works. This file describes several supporting types like AgentState, Agent, Direction, and Grid.</td>
+      </tr>
+      <tr>
+        <td><code>util.py</code></td>
+        <td>Useful data structures for implementing search algorithms. You don't need to use these for this project, but may find other functions defined here to be useful.</td>
+      </tr>
+      <tr>
+        <td colspan="2"><b>Supporting files you can ignore:</b></td>
+      </tr>
+      <tr>
+        <td><code>graphicsDisplay.py</code></td>
+        <td>Graphics for Pacman</td>
+      </tr>
+      <tr>
+        <td><code>graphicsUtils.py</code></td>
+        <td>Support for Pacman graphics</td>
+      </tr>
+      <tr>
+        <td><code>textDisplay.py</code></td>
+        <td>ASCII graphics for Pacman</td>
+      </tr>
+      <tr>
+        <td><code>ghostAgents.py</code></td>
+        <td>Agents to control ghosts</td>
+      </tr>
+      <tr>
+        <td><code>keyboardAgents.py</code></td>
+        <td>Keyboard interfaces to control Pacman</td>
+      </tr>
+      <tr>
+        <td><code>layout.py</code></td>
+        <td>Code for reading layout files and storing their contents</td>
+      </tr>
+      <tr>
+        <td><code>autograder.py</code></td>
+        <td>Project autograder</td>
+      </tr>
+      <tr>
+        <td><code>testParser.py</code></td>
+        <td>Parses autograder test and solution files</td>
+      </tr>
+      <tr>
+        <td><code>testClasses.py</code></td>
+        <td>General autograding test classes</td>
+      </tr>
+      <tr>
+        <td><code>test_cases/</code></td>
+        <td>Directory containing the test cases for each question</td>
+      </tr>
+      <tr>
+        <td class="fit"><code>multiagentTestClasses.py</code></td>
+        <td>Project 3 specific autograding test classes</td>
+      </tr>
+    </tbody>
+</table></div>
+
+<p><strong>Files to Edit and Submit</strong>: You will fill in portions of <code>multiAgents.py</code> during the assignment. Once you have completed the assignment, you will submit these files to Elearning (for instance, you can upload all <code>.py</code> files in the folder). Please do not change the other files in this distribution.</p>
+
+<p><strong>Evaluation</strong>: Your code will be autograded for technical correctness. Please do not change the names of any provided functions or classes within the code, or you will wreak havoc on the autograder. However, the correctness of your implementation - not the autograder's judgements - will be the final judge of your score. If necessary, we will review and grade assignments individually to ensure that you receive due credit for your work.</p>
+
+<p><strong>Academic Dishonesty</strong>: We will be checking your code against other submissions in the class for logical redundancy. If you copy someone else's code and submit it with minor changes, we will know. These cheat detectors are quite hard to fool, so please don't try. We trust you all to submit your own work only; please don't let us down. If you do, we will pursue the strongest consequences available to us.</p>
+
+<p><strong>Getting Help</strong>: You are not alone! If you find yourself stuck on something, contact the course staff for help. Office hours, section, and the discussion forum are there for your support; please use them. If you can't make our office hours, let us know and we will schedule more. We want these projects to be rewarding and instructional, not frustrating and demoralizing. But, we don't know when or how to help unless you ask.</p>
+
+<p><strong>Discussion</strong>: Please be careful not to post spoilers.</p><hr>
+      
+<h2 id="welcome-to-multi-agent-pacman">
+  <a href="https://personal.utdallas.edu/~bxm190007/cs4365/projects/project2/#welcome-to-multi-agent-pacman"></a> Welcome to Multi-Agent Pacman        
+</h2>
+    
+
+<p>First, play a game of classic Pacman by running the following command:</p>
+
+<div><div class="highlight"><pre class="highlight"><code>python pacman.py
+</code></pre></div></div>
+
+<p>and using the arrow keys to move. Now, run the provided ReflexAgent in multiAgents.py</p>
+
+<div><div class="highlight"><pre class="highlight"><code>python pacman.py <span class="nt">-p</span> ReflexAgent
+</code></pre></div></div>
+
+<p>Note that it plays quite poorly even on simple layouts:</p>
+
+<div><div class="highlight"><pre class="highlight"><code>python pacman.py <span class="nt">-p</span> ReflexAgent <span class="nt">-l</span> testClassic
+</code></pre></div></div>
+
+<p>Inspect its code (in <code>multiAgents.py</code>) and make sure you understand what it's doing.</p><hr>
+      <h2 id="q1-4-pts-reflex-agent">
+        
+        
+          <a href="https://personal.utdallas.edu/~bxm190007/cs4365/projects/project2/#q1-4-pts-reflex-agent"></a> Q1 (4 pts): Reflex Agent
+        
+        
+      </h2>
+    
+
+<p>Improve the <code>ReflexAgent</code> in <code>multiAgents.py</code> to play respectably. The provided reflex agent code provides some helpful examples of methods that query the <code>GameState</code> for information. A capable reflex agent will have to consider both food locations and ghost locations to perform well. Your agent should easily and reliably clear the <code>testClassic</code> layout:</p>
+
+<div><div class="highlight"><pre class="highlight"><code>python pacman.py <span class="nt">-p</span> ReflexAgent <span class="nt">-l</span> testClassic
+</code></pre></div></div>
+
+<p>Try out your reflex agent on the default <code>mediumClassic</code> layout with one ghost or two (and animation off to speed up the display):</p>
+
+<div><div class="highlight"><pre class="highlight"><code>python pacman.py <span class="nt">--frameTime</span> 0 <span class="nt">-p</span> ReflexAgent <span class="nt">-k</span> 1
+</code></pre></div></div>
+
+<div><div class="highlight"><pre class="highlight"><code>python pacman.py <span class="nt">--frameTime</span> 0 <span class="nt">-p</span> ReflexAgent <span class="nt">-k</span> 2
+</code></pre></div></div>
+
+<p>How does your agent fare? It will likely often die with 2 ghosts on the default board, unless your evaluation function is quite good.</p>
+
+<p><em>Note</em>: Remember that <code>newFood</code> has the function <code>asList()</code></p>
+
+<p><em>Note</em>: As features, try the reciprocal of important values (such as distance to food) rather than just the values themselves.</p>
+
+<p><em>Note</em>: The evaluation function you're writing is evaluating state-action pairs; in later parts of the project, you'll be evaluating states.</p>
+
+<p><em>Note</em>: You may find it useful to view the internal contents of various objects for debugging. You can do this by printing the objects' string representations. For example, you can print <code>newGhostStates</code> with <code>print(newGhostStates)</code>.</p>
+
+<p>Options: Default ghosts are random; you can also play for fun with slightly smarter directional ghosts using <code>-g DirectionalGhost</code>. If the randomness is preventing you from telling whether your agent is improving, you can use <code>-f</code> to run with a fixed random seed (same random choices every game). You can also play multiple games in a row with <code>-n</code>. Turn off graphics with <code>-q</code> to run lots of games quickly.</p>
+
+<p><em>Grading</em>: We will run your agent on the <code>openClassic</code> layout 10 times. You will receive 0 points if your agent times out, or never wins. You will receive 1 point if your agent wins at least 5 times, or 2 points if your agent wins all 10 games. You will receive an additional 1 point if your agent's average score is greater than 500, or 2 points if it is greater than 1000. You can try your agent out under these conditions with</p>
+
+<div><div class="highlight"><pre class="highlight"><code>python autograder.py <span class="nt">-q</span> q1
+</code></pre></div></div>
+
+<p>To run it without graphics, use:</p>
+
+<div><div class="highlight"><pre class="highlight"><code>python autograder.py <span class="nt">-q</span> q1 <span class="nt">--no-graphics</span>
+</code></pre></div></div>
+
+<p>Don't spend too much time on this question, though, as the meat of the project lies ahead.</p><hr>
+      <h2 id="q2-5-pts-minimax">
+        
+        
+          <a href="https://personal.utdallas.edu/~bxm190007/cs4365/projects/project2/#q2-5-pts-minimax"></a> Q2 (5 pts): Minimax
+        
+        
+      </h2>
+    
+
+<p>Now you will write an adversarial search agent in the provided <code>MinimaxAgent</code> class stub in <code>multiAgents.py</code>. Your minimax agent should work with any number of ghosts, so you'll have to write an algorithm that is slightly more general than what you've previously seen in lecture. In particular, your minimax tree will have multiple min layers (one for each ghost) for every max layer.</p>
+
+<p>Your code should also expand the game tree to an arbitrary depth. Score the leaves of your minimax tree with the supplied <code>self.evaluationFunction</code>, which defaults to <code>scoreEvaluationFunction</code>. <code>MinimaxAgent</code> extends <code>MultiAgentSearchAgent</code>, which gives access to <code>self.depth</code> and <code>self.evaluationFunction</code>. Make sure your minimax code makes reference to these two variables where appropriate as these variables are populated in response to command line options.</p>
+
+<p><em>Important</em>: A single search ply is considered to be one Pacman move and all the ghosts' responses, so depth 2 search will involve Pacman and each ghost moving two times (see diagram below).</p>
+
+<p><img src="./Project 2_files/minimax_depth.png"></p>
+
+<p><em>Grading</em>: We will be checking your code to determine whether it explores the correct number of game states. This is the only reliable way to detect some very subtle bugs in implementations of minimax. As a result, the autograder will be very picky about how many times you call <code>GameState.generateSuccessor</code>. If you call it any more or less than necessary, the autograder will complain. To test and debug your code, run</p>
+
+<div><div class="highlight"><pre class="highlight"><code>python autograder.py <span class="nt">-q</span> q2
+</code></pre></div></div>
+
+<p>This will show what your algorithm does on a number of small trees, as well as a pacman game. To run it without graphics, use:</p>
+
+<div><div class="highlight"><pre class="highlight"><code>python autograder.py <span class="nt">-q</span> q2 <span class="nt">--no-graphics</span>
+</code></pre></div></div>
+      <h3 id="hints-and-observations">
+        
+        
+          <a href="https://personal.utdallas.edu/~bxm190007/cs4365/projects/project2/#hints-and-observations"></a> Hints and Observations
+        
+        
+      </h3>
+    
+
+<ul>
+  <li>Implement the algorithm recursively using helper function(s).</li>
+  <li>The correct implementation of minimax will lead to Pacman losing the game in some tests. This is not a problem: as it is correct behaviour, it will pass the tests.</li>
+  <li>The evaluation function for the Pacman test in this part is already written (<code>self.evaluationFunction</code>). You shouldn't change this function, but recognize that now we're evaluating states rather than actions, as we were for the reflex agent. Look-ahead agents evaluate future states whereas reflex agents evaluate actions from the current state.</li>
+  <li>The minimax values of the initial state in the <code>minimaxClassic</code> layout are 9, 8, 7, -492 for depths 1, 2, 3 and 4 respectively. Note that your minimax agent will often win (665/1000 games for us) despite the dire prediction of depth 4 minimax.
+    <div><div class="highlight"><pre class="highlight"><code>  python pacman.py <span class="nt">-p</span> MinimaxAgent <span class="nt">-l</span> minimaxClassic <span class="nt">-a</span> <span class="nv">depth</span><span class="o">=</span>4
+</code></pre></div>    </div>
+  </li>
+  <li>Pacman is always agent 0, and the agents move in order of increasing agent index.</li>
+  <li>All states in minimax should be <code>GameStates</code>, either passed in to <code>getAction</code> or generated via <code>GameState.generateSuccessor</code>. In this project, you will not be abstracting to simplified states.</li>
+  <li>On larger boards such as <code>openClassic</code> and <code>mediumClassic</code> (the default), you'll find Pacman to be good at not dying, but quite bad at winning. He'll often thrash around without making progress. He might even thrash around right next to a dot without eating it because he doesn't know where he'd go after eating that dot. Don't worry if you see this behavior, question 5 will clean up all of these issues.</li>
+  <li>When Pacman believes that his death is unavoidable, he will try to end the game as soon as possible because of the constant penalty for living. Sometimes, this is the wrong thing to do with random ghosts, but minimax agents always assume the worst:
+    <div><div class="highlight"><pre class="highlight"><code>  python pacman.py <span class="nt">-p</span> MinimaxAgent <span class="nt">-l</span> trappedClassic <span class="nt">-a</span> <span class="nv">depth</span><span class="o">=</span>3
+</code></pre></div>    </div>
+    <p>Make sure you understand why Pacman rushes the closest ghost in this case.</p>
+  </li>
+</ul><hr>
+      <h2 id="q3-5-pts-alpha-beta-pruning">
+        
+        
+          <a href="https://personal.utdallas.edu/~bxm190007/cs4365/projects/project2/#q3-5-pts-alpha-beta-pruning"></a> Q3 (5 pts): Alpha-Beta Pruning
+        
+        
+      </h2>
+    
+
+<p>Make a new agent that uses alpha-beta pruning to more efficiently explore the minimax tree, in <code>AlphaBetaAgent</code>. Again, your algorithm will be slightly more general than the pseudocode from lecture, so part of the challenge is to extend the alpha-beta pruning logic appropriately to multiple minimizer agents.</p>
+
+<p>You should see a speed-up (perhaps depth 3 alpha-beta will run as fast as depth 2 minimax). Ideally, depth 3 on <code>smallClassic</code> should run in just a few seconds per move or faster.</p>
+
+<div><div class="highlight"><pre class="highlight"><code>python pacman.py <span class="nt">-p</span> AlphaBetaAgent <span class="nt">-a</span> <span class="nv">depth</span><span class="o">=</span>3 <span class="nt">-l</span> smallClassic
+</code></pre></div></div>
+
+<p>The <code>AlphaBetaAgent</code> minimax values should be identical to the <code>MinimaxAgent</code> minimax values, although the actions it selects can vary because of different tie-breaking behavior. Again, the minimax values of the initial state in the <code>minimaxClassic</code> layout are 9, 8, 7 and -492 for depths 1, 2, 3 and 4 respectively.</p>
+
+<p><em>Grading</em>: Because we check your code to determine whether it explores the correct number of states, it is important that you perform alpha-beta pruning without reordering children. In other words, successor states should always be processed in the order returned by <code>GameState.getLegalActions</code>. Again, do not call <code>GameState.generateSuccessor</code> more than necessary.</p>
+
+<p><strong>You must not prune on equality in order to match the set of states explored by our autograder.</strong> (Indeed, alternatively, but incompatible with our autograder, would be to also allow for pruning on equality and invoke alpha-beta once on each child of the root node, but this will not match the autograder.)</p>
+
+<p>The pseudo-code below represents the algorithm you should implement for this question.</p>
+
+<p><img src="./Project 2_files/alpha_beta_impl.png" alt="Alpha-Beta Implementation"></p>
+
+<p>To test and debug your code, run</p>
+
+<div><div class="highlight"><pre class="highlight"><code>python autograder.py <span class="nt">-q</span> q3
+</code></pre></div></div>
+
+<p>This will show what your algorithm does on a number of small trees, as well as a pacman game. To run it without graphics, use:</p>
+
+<div><div class="highlight"><pre class="highlight"><code>python autograder.py <span class="nt">-q</span> q3 <span class="nt">--no-graphics</span>
+</code></pre></div></div>
+
+<p>The correct implementation of alpha-beta pruning will lead to Pacman losing some of the tests. This is not a problem: as it is correct behaviour, it will pass the tests.</p><hr>
+      <h2 id="q4-5-pts-expectimax">
+        
+        
+          <a href="https://personal.utdallas.edu/~bxm190007/cs4365/projects/project2/#q4-5-pts-expectimax"></a>Q4 (5 pts): Expectimax
+        
+        
+      </h2>
+    
+
+<p>Minimax and alpha-beta are great, but they both assume that you are playing against an adversary who makes optimal decisions. As anyone who has ever won tic-tac-toe can tell you, this is not always the case. In this question you will implement the <code>ExpectimaxAgent</code>, which is useful for modeling probabilistic behavior of agents who may make suboptimal choices.</p>
+
+<p>As with the search and problems yet to be covered in this class, the beauty of these algorithms is their general applicability. To expedite your own development, we've supplied some test cases based on generic trees. You can debug your implementation on small the game trees using the command:</p>
+
+<div><div class="highlight"><pre class="highlight"><code>python autograder.py <span class="nt">-q</span> q4
+</code></pre></div></div>
+
+<p>Debugging on these small and manageable test cases is recommended and will help you to find bugs quickly.</p>
+
+<p>Once your algorithm is working on small trees, you can observe its success in Pacman. Random ghosts are of course not optimal minimax agents, and so modeling them with minimax search may not be appropriate. <code>ExpectimaxAgent</code> will no longer take the min over all ghost actions, but the expectation according to your agent's model of how the ghosts act. To simplify your code, assume you will only be running against an adversary which chooses amongst their <code>getLegalActions</code> uniformly at random.</p>
+
+<p>To see how the ExpectimaxAgent behaves in Pacman, run:</p>
+
+<div><div class="highlight"><pre class="highlight"><code>python pacman.py <span class="nt">-p</span> ExpectimaxAgent <span class="nt">-l</span> minimaxClassic <span class="nt">-a</span> <span class="nv">depth</span><span class="o">=</span>3
+</code></pre></div></div>
+
+<p>You should now observe a more cavalier approach in close quarters with ghosts. In particular, if Pacman perceives that he could be trapped but might escape to grab a few more pieces of food, he'll at least try. Investigate the results of these two scenarios:</p>
+
+<div><div class="highlight"><pre class="highlight"><code>python pacman.py <span class="nt">-p</span> AlphaBetaAgent <span class="nt">-l</span> trappedClassic <span class="nt">-a</span> <span class="nv">depth</span><span class="o">=</span>3 <span class="nt">-q</span> <span class="nt">-n</span> 10
+</code></pre></div></div>
+
+<div><div class="highlight"><pre class="highlight"><code>python pacman.py <span class="nt">-p</span> ExpectimaxAgent <span class="nt">-l</span> trappedClassic <span class="nt">-a</span> <span class="nv">depth</span><span class="o">=</span>3 <span class="nt">-q</span> <span class="nt">-n</span> 10
+</code></pre></div></div>
+
+<p>You should find that your <code>ExpectimaxAgent</code> wins about half the time, while your <code>AlphaBetaAgent</code> always loses. Make sure you understand why the behavior here differs from the minimax case.</p>
+
+<p>The correct implementation of expectimax will lead to Pacman losing some of the tests. This is not a problem: as it is correct behaviour, it will pass the tests.</p><hr>
+      <h2 id="q5-6-pts-evaluation-function">
+        
+        
+          <a href="https://personal.utdallas.edu/~bxm190007/cs4365/projects/project2/#q5-6-pts-evaluation-function"></a> Q5 (6 pts): Evaluation Function
+        
+        
+      </h2>
+    
+
+<p>Write a better evaluation function for Pacman in the provided function <code>betterEvaluationFunction</code>. The evaluation function should evaluate states, rather than actions like your reflex agent evaluation function did. With depth 2 search, your evaluation function should clear the <code>smallClassic</code> layout with one random ghost more than half the time and still run at a reasonable rate (to get full credit, Pacman should be averaging around 1000 points when he's winning).</p>
+
+<p><em>Grading</em>: the autograder will run your agent on the smallClassic layout 10 times. We will assign points to your evaluation function in the following way:</p>
+
+<ul>
+  <li>If you win at least once without timing out the autograder, you receive 1 points. Any agent not satisfying these criteria will receive 0 points.</li>
+  <li>+1 for winning at least 5 times, +2 for winning all 10 times</li>
+  <li>+1 for an average score of at least 500, +2 for an average score of at least 1000 (including scores on lost games)</li>
+  <li>+1 if your games take on average less than 30 seconds on the autograder machine, when run with <code>--no-graphics</code>.</li>
+  <li>The additional points for average score and computation time will only be awarded if you win at least 5 times.</li>
+  <li>Please do not copy any files from Project 1, as it will not pass the autograder.</li>
+</ul>
+
+<p>You can try your agent out under these conditions with</p>
+
+<div><div class="highlight"><pre class="highlight"><code>python autograder.py <span class="nt">-q</span> q5
+</code></pre></div></div>
+
+<p>To run it without graphics, use:</p>
+
+<div><div class="highlight"><pre class="highlight"><code>python autograder.py <span class="nt">-q</span> q5 <span class="nt">--no-graphics</span>
+</code></pre></div></div><hr>
+
+  <h2 id="submission">Submission</h2>
+    <p>In order to submit your project upload the Python files you edited along with autograder scores in a single zip file via elearning.</p>
+    
+<h2 id="attribution">Attribution</h2>
+<p>The Pacman AI projects were developed at UC Berkeley.
+The core projects and autograders were primarily created by John DeNero <a href="mailto: denero@cs.berkeley.edu">(denero@cs.berkeley.edu)</a> and Dan Klein <a href="mailto: klein@cs.berkeley.edu">(klein@cs.berkeley.edu)</a>. Student side autograding was added by Brad Miller, Nick Hay, and Pieter Abbeel <a href="mailto: pabbeel@cs.berkeley.edu">(pabbeel@cs.berkeley.edu)</a>. Visit <a href="http://ai.berkeley.edu/home.html">ai.berkley.edu</a></p>
+
+
+
+
+</body><grammarly-desktop-integration data-grammarly-shadow-root="true" style="visibility: visible !important;"><template shadowrootmode="open"><style>
+      div.grammarly-desktop-integration {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select:none;
+        user-select:none;
+      }
+
+      div.grammarly-desktop-integration:before {
+        content: attr(data-content);
+      }
+    </style><div aria-label="grammarly-integration" role="group" tabindex="-1" class="grammarly-desktop-integration" data-content="{&quot;mode&quot;:&quot;full&quot;,&quot;isActive&quot;:true,&quot;isUserDisabled&quot;:false}"></div></template></grammarly-desktop-integration></html>

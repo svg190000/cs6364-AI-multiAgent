@@ -75,7 +75,36 @@ class ReflexAgent(Agent):
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
         "*** YOUR CODE HERE ***"
-        return successorGameState.getScore()
+        # Start from the game's own score: it already accounts for eating food,
+        # winning, dying, and the per-step time penalty.
+        score = successorGameState.getScore()
+
+        foodList = newFood.asList()
+
+        # Reward being close to the nearest pellet (reciprocal so nearby food
+        # matters much more than distant food, and the term stays bounded).
+        if foodList:
+            nearestFoodDist = min(manhattanDistance(newPos, food) for food in foodList)
+            score += 10.0 / nearestFoodDist
+
+        # Ghost handling: flee ghosts that can hurt us, chase ones we can eat.
+        for ghostState, scaredTime in zip(newGhostStates, newScaredTimes):
+            ghostPos = ghostState.getPosition()
+            dist = manhattanDistance(newPos, ghostPos)
+            if scaredTime > 0:
+                # Edible ghost: getting closer is good (points on capture).
+                if dist > 0:
+                    score += 200.0 / dist
+            else:
+                # Dangerous ghost: heavily penalize being adjacent, ignore when far.
+                if dist <= 1:
+                    score -= 500.0
+
+        # Discourage sitting still; STOP wastes a move and encourages thrashing.
+        if action == Directions.STOP:
+            score -= 5.0
+
+        return score
 
 def scoreEvaluationFunction(currentGameState: GameState):
     """
