@@ -221,7 +221,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         """
         "*** YOUR CODE HERE ***"
         # alpha = best value MAX (Pacman) can guarantee so far; beta = best value
-        # MIN (ghosts) can guarantee. They start fully open and tighten as we go.
+        # MIN (ghosts) can guarantee.
         alpha = float('-inf')
         beta = float('inf')
         # Pacman's turn (agent 0): pick the move with the best alpha-beta value.
@@ -294,9 +294,11 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legal moves.
         """
         "*** YOUR CODE HERE ***"
+        # Pacman's turn (agent 0): pick the move with the best expectimax value.
         bestAction = None
         bestValue = float('-inf')
         for action in gameState.getLegalActions(0):
+            # Pacman has just moved, so recurse starting at the first ghost.
             value = self.expectimax(gameState.generateSuccessor(0, action), 1, self.depth)
             if value > bestValue:
                 bestValue = value
@@ -304,9 +306,12 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         return bestAction
     
     def expectimax(self, gameState: GameState, agentIndex: int, depth: int):
+        # Base case: game over or depth exhausted -> score the state.
         if depth == 0 or gameState.isWin() or gameState.isLose():
             return self.evaluationFunction(gameState)
         
+        # Turn order wraps Pacman -> ghosts -> Pacman; one depth level is a full
+        # round, so only decrement when the turn wraps back to Pacman.
         numAgents = gameState.getNumAgents()
         nextAgentIndex = (agentIndex + 1) % numAgents
         if nextAgentIndex == 0:
@@ -315,6 +320,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             nextDepth = depth
         
         if agentIndex == 0:
+            # Pacman is a maximizer: take the best value over his moves.
             bestValue = float('-inf')
             for action in gameState.getLegalActions(agentIndex):
                 successor = gameState.generateSuccessor(agentIndex, action)
@@ -323,6 +329,8 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
                     bestValue = value
             return bestValue
         else:
+            # Ghost is a chance node: it moves uniformly at random, so return the
+            # average of its children (each legal move is equally likely).
             chanceValue = 0
             for action in gameState.getLegalActions(agentIndex):
                 successor = gameState.generateSuccessor(agentIndex, action)
