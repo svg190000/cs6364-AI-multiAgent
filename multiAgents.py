@@ -165,9 +165,12 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
+        # This is Pacman's turn (agent 0). Try every legal move, score the
+        # resulting state with minimax, and keep the move with the best value.
         bestAction = None
         bestValue = float('-inf')
         for action in gameState.getLegalActions(0):
+            # Pacman has just moved, so the recursion starts at the first ghost.
             value = self.minimax(gameState.generateSuccessor(0, action), self.depth, 1)
             if value > bestValue:
                 bestValue = value
@@ -175,18 +178,25 @@ class MinimaxAgent(MultiAgentSearchAgent):
         return bestAction
         
     def minimax(self, gameState: GameState, depth: int, agentIndex: int):
+        # Base case: stop if the game is over or we've searched deep enough,
+        # and score the state with the evaluation function.
         if depth == 0 or gameState.isWin() or gameState.isLose():
             return self.evaluationFunction(gameState)
         
         numAgents = gameState.getNumAgents()
 
+        # Agents take turns in order: Pacman (0), ghost 1, ghost 2, ... then back
+        # to Pacman. The modulo wraps around to Pacman after the last ghost.
         nextAgentIndex = (agentIndex + 1) % numAgents
 
+        # One "ply" of depth is a full round (Pacman + every ghost moving once),
+        # so only drop a depth level once the turn wraps back to Pacman.
         if nextAgentIndex == 0:
             nextDepth = depth - 1
         else:
             nextDepth = depth
 
+        # Branch on the current agent's legal moves, collecting each child's value.
         legalActions = gameState.getLegalActions(agentIndex)
         values = []
 
@@ -194,6 +204,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
             successor = gameState.generateSuccessor(agentIndex, action)
             values.append(self.minimax(successor, nextDepth, nextAgentIndex))
 
+        # Pacman maximizes his score; every ghost minimizes it (worst case).
         if agentIndex == 0:
             return max(values)
         else:
@@ -348,7 +359,7 @@ def betterEvaluationFunction(currentGameState: GameState):
 
     # Food: the per-pellet penalty dominates so eating is always worthwhile,
     # while the small distance penalty gently pulls Pacman toward the nearest
-    # pellet (Manhattan, so it can thrash slightly around walls).
+    # pellet (Manhattan, so pacman might thrash slightly around walls).
     if foodCount > 0:
         nearestFoodDist = min(manhattanDistance(position, food) for food in foodList.asList())
         score -= 0.5 * nearestFoodDist
