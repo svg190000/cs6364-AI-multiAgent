@@ -311,10 +311,53 @@ def betterEvaluationFunction(currentGameState: GameState):
     Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
     evaluation function (question 5).
 
-    DESCRIPTION: <write something here so we know what you did>
+    DESCRIPTION: Starts from the game score and adjusts it with a few features.
+    Ghosts: chase scared ghosts (reward grows as they get closer) and flee
+    dangerous ones (heavy penalty when within 2 tiles). Food: eating is the
+    dominant incentive via a large per-pellet penalty, with a small penalty on
+    the distance to the nearest pellet to pull Pacman toward food. Capsules:
+    penalize each remaining capsule so Pacman clears them too.
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    score = currentGameState.getScore()
+    position = currentGameState.getPacmanPosition()
+    ghostStates = currentGameState.getGhostStates()
+    scaredTimes = [ghostState.scaredTimer for ghostState in ghostStates]
+    foodList = currentGameState.getFood()
+    foodCount = foodList.count()
+    powerCapsules = currentGameState.getCapsules()
+    powerCapsuleCount = len(powerCapsules)
+    
+    for ghostState, scaredTime in zip(ghostStates, scaredTimes):
+            ghostPos = ghostState.getPosition()
+            dist = manhattanDistance(position, ghostPos)
+            if scaredTime > 0:
+                # Edible ghost: reward being on it, and reward closing in while
+                # there's still enough scared time left to reach it.
+                if dist == 0:
+                    score += 1000.0
+                elif dist < scaredTime:
+                    score += 500.0 / (dist + 1)
+            else:
+                # Dangerous ghost: huge penalty for sharing a tile, smaller
+                # penalty when within 2 tiles, ignored when farther away.
+                if dist == 0:
+                    score -= 2000.0
+                elif dist <= 2:
+                    score -= 500.0 / (dist + 0.5)
+
+    # Food: the per-pellet penalty dominates so eating is always worthwhile,
+    # while the small distance penalty gently pulls Pacman toward the nearest
+    # pellet (Manhattan, so it can thrash slightly around walls).
+    if foodCount > 0:
+        nearestFoodDist = min(manhattanDistance(position, food) for food in foodList.asList())
+        score -= 0.5 * nearestFoodDist
+        score -= 20.0 * foodCount
+
+    # Penalize each remaining capsule so Pacman is motivated to eat them.
+    if powerCapsuleCount > 0:
+        score -= 25.0 * powerCapsuleCount
+    return score
 
 # Abbreviation
 better = betterEvaluationFunction
