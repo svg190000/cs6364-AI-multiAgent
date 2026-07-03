@@ -220,22 +220,30 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
+        # alpha = best value MAX (Pacman) can guarantee so far; beta = best value
+        # MIN (ghosts) can guarantee. They start fully open and tighten as we go.
         alpha = float('-inf')
         beta = float('inf')
+        # Pacman's turn (agent 0): pick the move with the best alpha-beta value.
         bestAction = None
         bestValue = float('-inf')
         for action in gameState.getLegalActions(0):
+            # Pacman has just moved, so recurse starting at the first ghost.
             value = self.alphaBeta(gameState.generateSuccessor(0, action), 1, self.depth, alpha, beta)
             if value > bestValue:
                 bestValue = value
                 bestAction = action
+            # Raise alpha as the root maximizer learns it can guarantee more.
             alpha = max(alpha, value)
         return bestAction
     
     def alphaBeta(self, gameState: GameState, agentIndex: int, depth: int, alpha: float, beta: float):
+        # Base case: game over or depth exhausted -> score the state.
         if depth == 0 or gameState.isWin() or gameState.isLose():
             return self.evaluationFunction(gameState)
         
+        # Turn order wraps Pacman -> ghosts -> Pacman; one depth level is a full
+        # round, so only decrement when the turn wraps back to Pacman.
         numAgents = gameState.getNumAgents()
         nextAgentIndex = (agentIndex + 1) % numAgents
         if nextAgentIndex == 0:
@@ -243,6 +251,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         else:
             nextDepth = depth
         
+        # Pacman is a maximizer node; every ghost is a minimizer node.
         if agentIndex == 0:
             return self.maxValue(gameState, agentIndex, nextAgentIndex, nextDepth, alpha, beta)
         else:
@@ -253,6 +262,8 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         for action in gameState.getLegalActions(agentIndex):
             successor = gameState.generateSuccessor(agentIndex, action)
             v = max(v, self.alphaBeta(successor, nextAgentIndex, nextDepth, alpha, beta))
+            # Prune: if this exceeds beta, the minimizer above would never let us
+            # reach here, so skip the rest. Strict '>' avoids pruning on equality.
             if v > beta:
                 return v
             alpha = max(alpha, v)
@@ -263,6 +274,8 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         for action in gameState.getLegalActions(agentIndex):
             successor = gameState.generateSuccessor(agentIndex, action)
             v = min(v, self.alphaBeta(successor, nextAgentIndex, nextDepth, alpha, beta))
+            # Prune: if this drops below alpha, the maximizer above already has a
+            # better option, so skip the rest. Strict '<' avoids pruning on equality.
             if v < alpha:
                 return v
             beta = min(beta, v)
